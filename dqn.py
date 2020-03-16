@@ -76,7 +76,6 @@ def test():
             action = env.action_space.sample()
         
         next_state, reward, done, info = env.step(action)
-        breakpoint()
         total_reward += reward
         state = next_state
         frame += 1
@@ -86,8 +85,6 @@ def test():
     print(f"[TESTING] Total Reward: {total_reward}")
 
     return total_reward
-
-test()
 
 avg_reward = 0
 for episode in range(EPISODES):
