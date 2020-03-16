@@ -81,7 +81,7 @@ class Memory:
         return self.curr // self.size_per_device
 
     def current_device(self):
-        return self.storage_devices[self.curr // self.size_per_device]
+        return self.storage_device[self.curr // self.size_per_device]
 
     def sample(self, N):
         if self.size() < N:
