@@ -15,7 +15,7 @@ import os
 
 from model import Model
 from plotting import VisdomLinePlotter
-from environment import Breakout
+from environment import Environment
 from utils import Memory, EpsilonScheduler, make_log_dir
 
 parser = argparse.ArgumentParser(
@@ -42,15 +42,16 @@ PLOT_EVERY = 10 # (episodes)
 SAVE_EVERY = 1000 # (episodes)
 EXPERIMENT_DIR = "experiments"
 NUM_TEST = 20
+GAME = 'breakout'
 
 scheduler = EpsilonScheduler(schedule=[(0, 1), (1e6, 0.1), (20e6, 0.01)])
 
 if not args.nosave:
     root_dir, weight_dir, video_dir = make_log_dir(EXPERIMENT_DIR)
 
-plot_title = "DQN ({})".format(datetime.datetime.now().strftime("%d/%m/%y %H:%M"))
+plot_title = "{} DQN ({})".format(GAME, datetime.datetime.now().strftime("%d/%m/%y %H:%M"))
 
-env = Breakout()
+env = Environment(game=GAME)
 mem = Memory(MEM_SIZE, storage_devices=STORAGE_DEVICES, target_device=DEVICE)
 
 q_func = Model(env.action_space.n).to(DEVICE)
@@ -61,7 +62,7 @@ target_q_func = Model(env.action_space.n).to(DEVICE)
 target_q_func.load_state_dict(q_func.state_dict())
 
 # optimizer = optim.RMSprop(q_func.parameters(), lr=1e-3, alpha=0.95, momentum=0.95, eps=1e-2)
-optimizer = optim.Adam(q_func.parameters(), lr=0.00001)
+optimizer = optim.Adam(q_func.parameters(), lr=0.00025) # 0.00001 for breakout, 0.00025 for pong
 
 loss_func = nn.SmoothL1Loss()
 plotter = VisdomLinePlotter(disable=args.nosave)
@@ -128,11 +129,9 @@ for episode in range(EPISODES):
 
         lives = env.ale.lives() # get lives before action
         next_state, reward, done, info = env.step(action)
-                
-        if env.ale.lives() != lives: # hack used in the paper to make loss of life a terminal state.
-            mem.store(state[0,0], action, reward, True) # we store the earliest frame in the window
-        else:
-            mem.store(state[0,0], action, reward, done)
+        
+        # hack to make learning faster (count loss of life as end of episode for memory purposes)
+        mem.store(state[0,0], action, reward, done or (env.ale.lives() != lives))
 
         state = next_state
         total_reward += reward

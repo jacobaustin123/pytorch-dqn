@@ -6,9 +6,18 @@ import random
 # mean = torch.Tensor([0.1])
 # std = torch.Tensor([0.2])
 
-class Breakout:
-    def __init__(self):
-        self.env = gym.make('BreakoutDeterministic-v4') # BreakoutNoFrameskip-v4
+games = {
+    'breakout' : 'BreakoutDeterministic-v4',
+    'space invaders' : 'SpaceInvaders-v0',
+    'pong' : 'PongDeterministic-v4',
+}
+
+class Environment:
+    def __init__(self, game='breakout'):
+        if game.lower() not in games:
+            raise ValueError(f"Game {game} not supported by this environment.")
+
+        self.env = gym.make(games[game.lower()])
 
         self.ale = self.env.ale
         self.spec = self.env.spec
@@ -23,7 +32,7 @@ class Breakout:
         self.transforms = torchvision.transforms.Compose([
             torchvision.transforms.ToPILImage(),
             torchvision.transforms.Grayscale(),
-            lambda x : torchvision.transforms.functional.crop(x, 32, 8, 168, 144),
+            lambda x : torchvision.transforms.functional.crop(x, 25, 8, 180, 144),
             torchvision.transforms.Resize((84, 84), 0),
             torchvision.transforms.ToTensor(),
             # torchvision.transforms.Normalize(mean = mean, std = std)
