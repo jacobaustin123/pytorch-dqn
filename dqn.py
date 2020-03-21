@@ -23,6 +23,7 @@ parser = argparse.ArgumentParser(
 )
 
 parser.add_argument('--weights', type=str, help='weights file for pretrained weights')
+parser.add_argument('--nosave', default=False, action='store_true', help='do not save a record of the run')
 
 args = parser.parse_args()
 
@@ -44,7 +45,9 @@ NUM_TEST = 20
 
 scheduler = EpsilonScheduler(schedule=[(0, 1), (1e6, 0.1), (20e6, 0.01)])
 
-root_dir, weight_dir, video_dir = make_log_dir(EXPERIMENT_DIR)
+if not args.nosave:
+    root_dir, weight_dir, video_dir = make_log_dir(EXPERIMENT_DIR)
+
 plot_title = "DQN ({})".format(datetime.datetime.now().strftime("%d/%m/%y %H:%M"))
 
 env = Breakout()
@@ -56,14 +59,14 @@ if args.weights:
 
 target_q_func = Model(env.action_space.n).to(DEVICE)
 target_q_func.load_state_dict(q_func.state_dict())
-target_q_func.eval()
 
 # optimizer = optim.RMSprop(q_func.parameters(), lr=1e-3, alpha=0.95, momentum=0.95, eps=1e-2)
 optimizer = optim.Adam(q_func.parameters(), lr=0.00001)
 
 loss_func = nn.SmoothL1Loss()
-plotter = VisdomLinePlotter()
-env = Monitor(env, directory=video_dir, video_callable=lambda count: count % 500 == 0, force=True)
+plotter = VisdomLinePlotter(disable=args.nosave)
+if not args.nosave:
+    env = Monitor(env, directory=video_dir, video_callable=lambda count: count % 500 == 0, force=True)
 
 def test():
     print("[TESTING]")
@@ -113,7 +116,7 @@ for episode in range(EPISODES):
 
     env.reset()
     state, _, done, _ = env.step(env.action_space.sample())
-
+    
     while not done:
         q_values = q_func(state.to(DEVICE))
         if np.random.random() > scheduler.epsilon(): # epsilon-random policy
@@ -172,7 +175,7 @@ for episode in range(EPISODES):
     if episode % TEST_EVERY == 0:
         test_reward = test()
 
-    if episode % SAVE_EVERY == 0:
+    if episode % SAVE_EVERY == 0 and not args.nosave:
         path = f"episode-{episode}.pt"
         weight_path = os.path.join(weight_dir, path)
         info_path = os.path.join(root_dir, "info.txt")

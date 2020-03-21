@@ -3,7 +3,11 @@ import numpy as np
 
 class VisdomLinePlotter(object):
     """Plots to Visdom"""
-    def __init__(self, env_name='main', port=8050):
+    def __init__(self, env_name='main', port=8050, disable=False):
+        self.disable = disable
+        if self.disable:
+            return
+
         try:
             self.viz = Visdom(port=port)
         except (ConnectionError, ConnectionRefusedError) as e:
@@ -16,12 +20,18 @@ class VisdomLinePlotter(object):
         self.plots = {}
         
     def imshow(self, var_name, images):
+        if self.disable:
+            return
+
         if var_name not in self.plots:
             self.plots[var_name] = self.viz.images(images)
         else:
             self.viz.images(images, win=self.plots[var_name], env=self.env)
 
     def plot(self, window_id, variable, title, x, y, xlabel='epochs'):
+        if self.disable:
+            return
+
         if window_id not in self.plots:
             self.plots[window_id] = self.viz.line(X=np.array([x,x]), Y=np.array([y,y]), env=self.env, opts=dict(
                 legend=[variable],

@@ -133,7 +133,7 @@ class EpsilonScheduler:
         max_steps.
 
         Parameters:
-            schedule (list) - list of tuples of the form (step, rate). The scheduler linearly 
+            schedule (list) - list of tuples of the form (step, epsilon). The scheduler linearly 
             interpolates between these values.
         """
 
@@ -153,7 +153,7 @@ class EpsilonScheduler:
         for i, (next_step, next_epsilon) in enumerate(self.schedule):
             if next_step > self.steps:
                 prior = self.schedule[i - 1]
-                progress = self.steps - prior[0] / (next_step - prior[0])
+                progress = (self.steps - prior[0]) / (next_step - prior[0])
                 return progress * next_epsilon + (1 - progress) * prior[1]
 
         return self.schedule[-1][1]

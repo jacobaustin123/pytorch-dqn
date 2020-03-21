@@ -5,7 +5,7 @@ import time
 
 from environment import Breakout
 
-env = Breakout(skip=4)
+env = Breakout()
 
 for _ in range(3):
     env.reset()
