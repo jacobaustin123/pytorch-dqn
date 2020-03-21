@@ -51,7 +51,6 @@ class Memory:
         # print(f"curr: {self.curr}, idx: {idx}, device: {device}, device_id: {device_id}")
 
         self.states[device_id][idx] = (state * 255).to(torch.uint8).to(device)
-        # self.next_states[device_id][idx] = (next_state * 255).to(torch.uint8).to(device)
         self.actions[device_id][idx] = action
         self.rewards[device_id][idx] = reward
         self.terminals[device_id][idx] = terminal
@@ -127,17 +126,22 @@ class Memory:
                torch.cat(terminals)
 
 class EpsilonScheduler:
-    def __init__(self, init_value=1.0, lower_bound=0.1, max_steps=1e6):
+    def __init__(self, schedule):
         """
         EpsilonScheduler is a linear scheduler for the annealed learning rate
         for the DQN. Epsilon starts at init_value and degrades to lowe_bound over
         max_steps.
+
+        Parameters:
+            schedule (list) - list of tuples of the form (step, rate). The scheduler linearly 
+            interpolates between these values.
         """
 
-        self.init_value = init_value
-        self.lower_bound = lower_bound
-        self.max_steps = max_steps
         self.steps = 0
+        self.schedule = sorted(schedule, key=lambda x: x[0])
+
+        if len(self.schedule) < 1 or self.schedule[0][0] != 0:
+            raise ValueError("schedule must have length > 0 and must begin with an initial setting")
 
     def step(self, n):
         self.steps += n
@@ -146,8 +150,13 @@ class EpsilonScheduler:
         return self.steps
 
     def epsilon(self):
-        progress = min(self.steps, self.max_steps) / self.max_steps
-        return progress * self.lower_bound + (1 - progress) * self.init_value
+        for i, (next_step, next_epsilon) in enumerate(self.schedule):
+            if next_step > self.steps:
+                prior = self.schedule[i - 1]
+                progress = self.steps - prior[0] / (next_step - prior[0])
+                return progress * next_epsilon + (1 - progress) * prior[1]
+
+        return self.schedule[-1][1]
 
 def make_log_dir(experiment_dir):
     if not os.path.exists(experiment_dir):

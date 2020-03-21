@@ -30,9 +30,6 @@ MEM_SIZE = int(1e6) # this is either 250k or 1 million in the paper (size of rep
 EPISODES = int(1e5) # total training episodes
 BATCH_SIZE = 64 # minibatch update size
 GAMMA = 0.99 # discount factor
-EPS_START = 1.0 # starting epsilon-greedy
-EPS_END = 0.1 # ending epsilon-greedy (minimum)
-EPS_STEPS = 1e6 # period of decrease
 STORAGE_DEVICES = ['cuda:1'] # list of devices to use for episode storage (need about 10GB for 1 million memories)
 DEVICE = 'cuda:1' # list of devices for computation
 UPDATE_FREQ = 4 # perform minibatch update once every UPDATE_FREQ
@@ -45,10 +42,11 @@ SAVE_EVERY = 1000 # (episodes)
 EXPERIMENT_DIR = "experiments"
 NUM_TEST = 20
 
+scheduler = EpsilonScheduler(schedule=[(0, 1), (1e6, 0.1), (20e6, 0.01)])
+
 root_dir, weight_dir, video_dir = make_log_dir(EXPERIMENT_DIR)
 plot_title = "DQN ({})".format(datetime.datetime.now().strftime("%d/%m/%y %H:%M"))
 
-scheduler = EpsilonScheduler(init_value=EPS_START, lower_bound=EPS_END, max_steps=EPS_STEPS)
 env = Breakout()
 mem = Memory(MEM_SIZE, storage_devices=STORAGE_DEVICES, target_device=DEVICE)
 
