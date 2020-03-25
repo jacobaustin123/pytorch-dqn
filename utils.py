@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import datetime
 import os
+import moviepy.editor as mpy
 
 class Memory:
     def __init__(self, max_size, storage_devices='cuda:0', target_device='cuda:0'):
@@ -158,11 +159,11 @@ class EpsilonScheduler:
 
         return self.schedule[-1][1]
 
-def make_log_dir(experiment_dir):
+def make_log_dir(experiment_dir, game):
     if not os.path.exists(experiment_dir):
         os.mkdir(experiment_dir)
 
-    root = os.path.join(experiment_dir, datetime.datetime.now().strftime("dqn_experiment_%d_%m_%y_%H_%M"))
+    root = os.path.join(experiment_dir, datetime.datetime.now().strftime("{}_%d_%m_%y_%H_%M".format(game.replace(" ", "_"))))
     weight_dir = os.path.join(root, "weights")
     video_dir = os.path.join(root, "videos")
 
@@ -178,3 +179,18 @@ def make_log_dir(experiment_dir):
     print(f"[INFO] saving experiment to {root}...")
 
     return root, weight_dir, video_dir
+
+def save_gif(frames, name="example.gif"):
+    num = 0
+
+    def make_frame(t):
+        nonlocal num
+        if num < len(frames):
+            num += 1
+            return (np.array(frames[num - 1]) * 255).astype(np.uint8)
+        else: 
+            return (np.array(frames[-1]) * 255).astype(np.uint8)
+
+    fps = 20
+    clip = mpy.VideoClip(make_frame, duration=len(frames) // fps)
+    clip.write_gif(name, fps=fps)

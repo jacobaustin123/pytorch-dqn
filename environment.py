@@ -8,8 +8,9 @@ import random
 
 games = {
     'breakout' : 'BreakoutDeterministic-v4',
-    'space invaders' : 'SpaceInvaders-v0',
+    'space invaders' : 'SpaceInvadersDeterministic-v4',
     'pong' : 'PongDeterministic-v4',
+    'centipede' : 'CentipedeDeterministic-v4'
 }
 
 class Environment:
@@ -53,14 +54,13 @@ class Environment:
         return min(reward, 1)
 
     def step(self, action):
-        total_reward = 0
-
         observation, reward, done, info = self.env.step(action)
-        reward = self.clip(reward)
+        clipped_reward = self.clip(reward)
+        info['unclipped_reward'] = reward
 
         self.history = torch.cat([self.history[1:], self.transforms(observation)])
 
-        return self.history.unsqueeze(0), reward, done, info
+        return self.history.unsqueeze(0), clipped_reward, done, info
 
     def close(self):
         return self.env.close()
