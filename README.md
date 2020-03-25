@@ -4,6 +4,7 @@ This repository is an implementation of the DeepMind DQN Algorithm for the ATARI
 
 ![example](demos/breakout/tunneling.gif)
 ![example](demos/pong/pong.gif)
+![example](demos/space-invaders/space-invaders.gif)
 
 ## Usage
 
