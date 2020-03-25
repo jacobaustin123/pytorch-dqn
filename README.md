@@ -2,7 +2,7 @@
 
 This repository is an implementation of the DeepMind DQN Algorithm for the ATARI Breakout environment from Minh et al.
 
-![example](demos/breakout/breakout.gif)
+![example](demos/breakout/tunneling.gif)
 ![example](demos/pong/pong.gif)
 
 ## Usage
