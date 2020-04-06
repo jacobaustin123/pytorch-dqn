@@ -1,4 +1,4 @@
-# pytorch-dqn
+# PyTorch Implementation of DeepMind's Human-Level Control through Deep Reinforcement Learning, Minh et al.
 
 This repository is an implementation of the DeepMind DQN Algorithm for the OpenAI gym ATARI environment from Minh et al.
 
